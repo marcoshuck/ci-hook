@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
-	"time"
 )
 
 func main() {
@@ -41,6 +39,7 @@ func TriggerEvent(w http.ResponseWriter, r *http.Request) {
 func triggerPush(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Println("Error - Trigger push:", err)
 		http.Error(w, "failed to read body", http.StatusInternalServerError)
 		return
 	}
@@ -48,14 +47,13 @@ func triggerPush(w http.ResponseWriter, r *http.Request) {
 	var payload Payload
 	err = json.Unmarshal(b, &payload)
 	if err != nil {
-		http.Error(w, "failed to read body", http.StatusInternalServerError)
+		log.Println("Error - Trigger push:", err)
+		http.Error(w, fmt.Sprintf("failed to read body: %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Printf("%+v", payload)
-
 	w.WriteHeader(http.StatusOK)
-	body := fmt.Sprintf("%s triggered a %s event in the %s, branch: %s",
+	body := fmt.Sprintf("%s triggered a %s event in the %s repository, reference: %s",
 		payload.Repository.Owner.Login,
 		"push",
 		payload.Repository.Fullname,
@@ -63,6 +61,7 @@ func triggerPush(w http.ResponseWriter, r *http.Request) {
 	)
 	_, err = w.Write([]byte(body))
 	if err != nil {
+		log.Println("Error - Trigger push:", err)
 		http.Error(w, "failed to write response", http.StatusInternalServerError)
 		return
 	}
@@ -82,32 +81,22 @@ func getEvent(r *http.Request) string {
 }
 
 type Payload struct {
-	Reference     string     `json:"ref"`
-	Before        string     `json:"before"`
-	After         string     `json:"after"`
-	Created       bool       `json:"created"`
-	Deleted       bool       `json:"deleted"`
-	Forced        bool       `json:"forced"`
-	BaseReference string     `json:"base_ref"`
-	Compare       url.URL    `json:"compare"`
-	Commits       []string   `json:"commits"`
-	HeadCommit    *string    `json:"head_commit"`
-	Repository    Repository `json:"repository"`
+	Reference  string     `json:"ref"`
+	Before     string     `json:"before"`
+	After      string     `json:"after"`
+	Repository Repository `json:"repository"`
 }
 
 type Repository struct {
-	ID        int       `json:"id"`
-	NodeID    string    `json:"node_id"`
-	Name      string    `json:"name"`
-	Fullname  string    `json:"full_name"`
-	Private   bool      `json:"private"`
-	Owner     Owner     `json:"owner"`
-	URL       url.URL   `json:"url"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	PushedAt  time.Time `json:"pushed_at"`
-	Archived  bool      `json:"archived"`
-	Disabled  bool      `json:"disabled"`
+	ID       int    `json:"id"`
+	NodeID   string `json:"node_id"`
+	Name     string `json:"name"`
+	Fullname string `json:"full_name"`
+	Private  bool   `json:"private"`
+	Owner    Owner  `json:"owner"`
+	URL      string `json:"url"`
+	Archived bool   `json:"archived"`
+	Disabled bool   `json:"disabled"`
 }
 
 type Owner struct {
