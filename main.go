@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// Another test!
 func main() {
 	http.HandleFunc("/github/payload", TriggerEvent)
 	// Test
