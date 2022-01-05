@@ -1,0 +1,8 @@
+image: test.org/image:latest
+metrics:
+  a: 1
+  b: 2
+  c: true
+title: "Amazing test"
+summary: "This is amazing, I can submit the summary from a file inside a repository"
+text: "Well, hello hello! This is the actual result of the check run, you can include any type of information here"
